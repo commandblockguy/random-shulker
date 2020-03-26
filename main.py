@@ -46,6 +46,10 @@ def gen_item(slot):
 		count = random.randint(1,64)
 	nbt["Count"] = count
 
+# I've done the math; unless Mojang adds more colors or removes item types, this won't be self-sustaining
+	if chosen_id.endswith("shulker_box"):
+		nbt["tag"] = gen_shulker_box_tag()
+
 	return nbt
 
 def gen_shulker_box_tag():
