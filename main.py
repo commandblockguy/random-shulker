@@ -17,19 +17,39 @@ unstackable_endings = ["_boat", "potion", "_bucket", "minecart", "shulker_box", 
 unstackables = ["debug_stick", "saddle", "totem_of_undying"] + enchantables + [id for id in item_ids if any(filter(lambda ending: id.endswith(ending), unstackable_endings))] + list(filter(lambda id: id.startswith("music_disc_"), item_ids))
 stack_16 = ["snowball", "bucket", "egg", "honey_bottle", "ender_pearl", "armor_stand"] + list(filter(lambda id: id.endswith("_banner"), item_ids)) + list(filter(lambda id: id.endswith("sign"), item_ids))
 
+def to_nbt(elem):
+	if type(elem) is int:
+		return str(elem)
+	if type(elem) is float:
+		return str(elem)
+	if type(elem) is str:
+		return '"' + elem + '"'
+	if type(elem) is list:
+		return "[" + ",".join(map(to_nbt, elem)) + "]"
+	if type(elem) is dict:
+		return "{" + ",".join([name + ":" + to_nbt(value) for (name, value) in elem.items()]) + "}"
+	raise TypeError("Unknown type " + str(type(elem)))
+
 def gen_item(slot):
+	nbt = {}
+
+	nbt["Slot"] = slot
+
 	chosen_id = random.choice(item_ids)
+	nbt["id"] = "minecraft:" + chosen_id
+
 	if chosen_id in unstackables:
 		count = 1
 	elif chosen_id in stack_16:
 		count = random.randint(1,16)
 	else:
 		count = random.randint(1,64)
-	return "{{Slot:{0},id:\"minecraft:{1}\",Count:{2}b}}".format(slot, chosen_id, count)
+	nbt["Count"] = count
+
+	return nbt
 
 def gen_shulker_box_tag():
-	items = map(gen_item, range(0,27))
-	return "{BlockEntityTag:{Items:[" + ",".join(items) + "]}}"
+	return {"BlockEntityTag": {"Items": list(map(gen_item, range(0,27)))}}
 
 
-print("/give @p minecraft:shulker_box" + gen_shulker_box_tag() + " 1")
+print("/give @p minecraft:shulker_box" + to_nbt(gen_shulker_box_tag()) + " 1")
